@@ -4,7 +4,7 @@ import os
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
+#from torch.autograd import Variable
 from torchvision import datasets, transforms
 
 from models import *
@@ -68,13 +68,14 @@ def test(model):
         raise ValueError("No valid dataset is given.")
     model.eval()
     correct = 0
-    for data, target in test_loader:
-        if args.cuda:
-            data, target = data.cuda(), target.cuda()
-        data, target = Variable(data, volatile=True), Variable(target)
-        output = model(data)
-        pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+    with torch.no_grad():
+        for data, target in test_loader:
+            if args.cuda:
+                data, target = data.cuda(), target.cuda()
+            #data, target = Variable(data, volatile=True), Variable(target)
+            output = model(data)
+            pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
+            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     print('\nTest set: Accuracy: {}/{} ({:.1f}%)\n'.format(
         correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset)))
