@@ -1,0 +1,3 @@
+model
+data.cifar10
+models/__pycache__
