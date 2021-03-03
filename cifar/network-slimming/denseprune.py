@@ -79,7 +79,7 @@ for k, m in enumerate(model.modules()):
         cfg.append(int(torch.sum(mask)))
         cfg_mask.append(mask.clone())
         print('layer index: {:d} \t total channel: {:d} \t remaining channel: {:d}'.
-            format(k, mask.shape[0], int(torch.sum(mask))))
+            format(k, mask.shape, int(torch.sum(mask))))
     elif isinstance(m, nn.MaxPool2d):
         cfg.append('M')
 

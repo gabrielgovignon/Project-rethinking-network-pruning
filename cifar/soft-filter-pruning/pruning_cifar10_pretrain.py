@@ -186,7 +186,7 @@ def main():
 
         # evaluate on validation set
         val_acc_1,   val_los_1   = validate(test_loader, net, criterion, log)
-        
+
         is_best = recorder.update(epoch, train_los, train_acc, val_los_1, val_acc_1)
 
         save_checkpoint({
@@ -219,7 +219,7 @@ def train(train_loader, model, criterion, optimizer, epoch, log):
         data_time.update(time.time() - end)
 
         if args.use_cuda:
-            target = target.cuda(async=True)
+            target = target.cuda(async_ =True)
             input = input.cuda()
         input_var = torch.autograd.Variable(input)
         target_var = torch.autograd.Variable(target)
@@ -265,7 +265,7 @@ def validate(val_loader, model, criterion, log):
 
     for i, (input, target) in enumerate(val_loader):
         if args.use_cuda:
-            target = target.cuda(async=True)
+            target = target.cuda(async_=True)
             input = input.cuda()
         input_var = torch.autograd.Variable(input, volatile=True)
         target_var = torch.autograd.Variable(target, volatile=True)
@@ -333,20 +333,20 @@ class Mask:
         self.mat = {}
         self.model = model
         self.mask_index = []
-        
-    
+
+
     def get_codebook(self, weight_torch,compress_rate,length):
         weight_vec = weight_torch.view(length)
         weight_np = weight_vec.cpu().numpy()
-    
+
         weight_abs = np.abs(weight_np)
         weight_sort = np.sort(weight_abs)
-        
+
         threshold = weight_sort[int (length * (1-compress_rate) )]
         weight_np [weight_np <= -threshold  ] = 1
         weight_np [weight_np >= threshold  ] = 1
         weight_np [weight_np !=1  ] = 0
-        
+
         print("codebook done")
         return weight_np
 
@@ -368,22 +368,22 @@ class Mask:
         else:
             pass
         return codebook
-    
+
     def convert2tensor(self,x):
         x = torch.FloatTensor(x)
         return x
-    
+
     def init_length(self):
         for index, item in enumerate(self.model.parameters()):
             self.model_size [index] = item.size()
-        
+
         for index1 in self.model_size:
             for index2 in range(0,len(self.model_size[index1])):
                 if index2 ==0:
                     self.model_length[index1] = self.model_size[index1][0]
                 else:
                     self.model_length[index1] *= self.model_size[index1][index2]
-                    
+
     def init_rate(self, layer_rate):
         for index, item in enumerate(self.model.parameters()):
             self.compress_rate [index] = 1
@@ -399,7 +399,7 @@ class Mask:
         elif args.arch == 'resnet110':
             last_index = 327
         self.mask_index =  [x for x in range (0,last_index,3)]
-        
+
     def init_mask(self,layer_rate):
         self.init_rate(layer_rate)
         for index, item in enumerate(self.model.parameters()):
@@ -424,8 +424,8 @@ class Mask:
             if(index ==0):
                 a = item.data.view(self.model_length[index])
                 b = a.cpu().numpy()
-                
+
                 print("number of nonzero weight is %d, zero is %d" %( np.count_nonzero(b),len(b)- np.count_nonzero(b)))
-        
+
 if __name__ == '__main__':
     main()
