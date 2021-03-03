@@ -154,6 +154,7 @@ def test():
     model.eval()
     test_loss = 0
     correct = 0
+<<<<<<< HEAD
     with torch.no_grad():
         for data, target in test_loader:
             if args.cuda:
@@ -163,6 +164,16 @@ def test():
             test_loss += F.cross_entropy(output, target, reduction='sum').data.item() # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+=======
+    for data, target in test_loader:
+        if args.cuda:
+            data, target = data.cuda(), target.cuda()
+        data, target = Variable(data, volatile=True), Variable(target)
+        output = model(data)
+        test_loss += F.cross_entropy(output, target, size_average=False).data.item() # sum up batch loss
+        pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+>>>>>>> 474f8ee683036ca149062e7cdaee05699db84f48
 
     test_loss /= len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.1f}%)\n'.format(
