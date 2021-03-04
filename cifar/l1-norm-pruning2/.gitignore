@@ -1,4 +1,3 @@
-output
-data.cifar10
-logs
 models
+data.*
+logs
