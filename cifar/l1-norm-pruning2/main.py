@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 #from torch.autograd import Variable
+from models import *
 
 import models
 
@@ -49,6 +50,8 @@ parser.add_argument('--arch', default='vgg', type=str,
                     help='architecture to use')
 parser.add_argument('--depth', default=16, type=int,
                     help='depth of the neural network')
+parser.add_argument('--prune-interval', default=16, type=int,
+                    help='number of epochs before pruning')
 
 
 args = parser.parse_args()
@@ -151,23 +154,29 @@ def test():
 
 
 def prune():
-    cfg = [32, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 256, 256, 256, 'M', 256, 256, 256]
 
+    prune_percentage = .05
+
+    global model
+    cfg = [32, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 256, 256, 256, 'M', 256, 256, 256]
+    prune_percentage = [.05] * len (cfg) # Here, we try to prune 5% of each layer.
     cfg_mask = []
     layer_id = 0
     for m in model.modules():
         if isinstance(m, nn.Conv2d):
             out_channels = m.weight.data.shape[0]
-            if out_channels == cfg[layer_id]:
-                cfg_mask.append(torch.ones(out_channels))
-                layer_id += 1
-                continue
+            #if out_channels == cfg[layer_id]:
+            #    cfg_mask.append(torch.ones(out_channels))
+            #    layer_id += 1
+            #    continue
+
+            p = prune_percentage[layer_id]
             weight_copy = m.weight.data.abs().clone()
             weight_copy = weight_copy.cpu().numpy()
             L1_norm = np.sum(weight_copy, axis=(1, 2, 3))
             arg_max = np.argsort(L1_norm)
-            arg_max_rev = arg_max[::-1][:cfg[layer_id]]
-            assert arg_max_rev.size == cfg[layer_id], "size of arg_max_rev not correct"
+            arg_max_rev = arg_max[::-1][: int (out_channels*(1-p))]
+            #assert arg_max_rev.size == cfg[layer_id], "size of arg_max_rev not correct"
             mask = torch.zeros(out_channels)
             mask[arg_max_rev.tolist()] = 1
             cfg_mask.append(mask)
@@ -231,4 +240,8 @@ for i in range (args.epochs):
     print ("Training network, epoch %d"%i)
     train (i)
     print ("Pruning network, epoch %d"%i)
-    prune ()
+
+    if i % args.prune_interval ==0:
+        prune ()
+
+test()
